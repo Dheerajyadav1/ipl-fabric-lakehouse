@@ -226,19 +226,19 @@ ipl-fabric-lakehouse/
 
 ### Lakehouse Overview
 
-(screenshots/delta_tables.png)
+![Lakehouse Overview](screenshots/delta_tables.png)
 
 ### Bronze Notebook
 
-(screenshots/bronze_notebook.png)
+![Bronze Notebook](screenshots/bronze_notebook.png)
 
 ### Silver Notebook
 
-(screenshots/silver_notebook.png)
+![Silver Notebook](screenshots/silver_notebook.png)
 
 ### Gold Notebook
 
-(screenshots/gold_notebook.png)
+![Gold Notebook](screenshots/gold_notebook.png)
 
 ---
 
