@@ -18,7 +18,7 @@ The project demonstrates modern data engineering practices including Lakehouse a
 
 ## Architecture
 
-![Architecture Diagram](architecture/medallion_architecture.png)
+![Architecture Diagram](architecture/architecture.jpg)
 
 ---
 
@@ -226,19 +226,19 @@ ipl-fabric-lakehouse/
 
 ### Lakehouse Overview
 
-_Add screenshot here_
+(screenshots/delta_tables.png)
 
-### Bronze Tables
+### Bronze Notebook
 
-_Add screenshot here_
+(screenshots/bronze_notebook.png)
 
-### Silver Tables
+### Silver Notebook
 
-_Add screenshot here_
+(screenshots/silver_notebook.png)
 
-### Gold Tables
+### Gold Notebook
 
-_Add screenshot here_
+(screenshots/gold_notebook.png)
 
 ---
 
@@ -251,7 +251,3 @@ _Add screenshot here_
 - Match outcome prediction using Machine Learning
 
 ---
-
-## Resume Highlight
-
-Built an end-to-end IPL analytics lakehouse on Microsoft Fabric using Medallion Architecture (Bronze/Silver/Gold), processing 260K+ ball-by-ball records with PySpark and Delta Lake, implementing data quality validation, partition-optimized transformations, and analytics-ready Gold tables for scalable cricket performance analysis.
