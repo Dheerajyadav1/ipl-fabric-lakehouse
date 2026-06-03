@@ -8,11 +8,11 @@
 
 ## Project Overview
 
-This project implements an end-to-end IPL Analytics Lakehouse using Microsoft Fabric and Medallion Architecture (Bronze → Silver → Gold).
+An end-to-end IPL Analytics Lakehouse built on **Microsoft Fabric** using **Medallion Architecture (Bronze → Silver → Gold)**.
 
-The pipeline ingests IPL ball-by-ball data covering 17 seasons (2008–2024), stores raw data in Delta Lake tables, performs data cleaning and quality validation using PySpark, and generates analytical Gold-layer tables for batting, bowling, and team performance analysis.
+The pipeline ingests 260,920+ ball-by-ball records spanning **17 IPL seasons (2008–2024)** across 1,095 matches and 74 venues — storing raw data in Delta Lake tables, applying rigorous data cleaning and quality validation using PySpark, and generating analytical Gold-layer tables for batting, bowling, and team performance KPIs.
 
-The project demonstrates modern data engineering practices including Lakehouse architecture, Delta tables, PySpark transformations, partitioned storage, and business KPI generation.
+The project demonstrates modern data engineering practices including Lakehouse architecture, Delta Lake transactional storage, PySpark transformations, partitioned storage, and business KPI generation — all orchestrated natively within Microsoft Fabric.
 
 ---
 
@@ -24,108 +24,91 @@ The project demonstrates modern data engineering practices including Lakehouse a
 
 ## Dataset Overview
 
-### Source
+**Source:** IPL Match & Delivery Dataset (2008–2024) — [Kaggle](https://www.kaggle.com/datasets/dgsports/ipl-ball-by-ball-2008-to-2024)
 
-IPL Match & Delivery Dataset (2008–2024)
-
-### Dataset Statistics
-
-| Metric | Value |
-|----------|----------|
-| Seasons Covered | 17 |
-| Matches | 1,095 |
-| Deliveries | 260,920 |
+| Metric           | Value   |
+|------------------|---------|
+| Seasons Covered  | 17      |
+| Matches          | 1,095   |
+| Venues           | 74      |
+| Deliveries       | 260,920 |
 
 ---
 
 ## Technology Stack
 
-| Technology | Purpose |
-|------------|----------|
-| Microsoft Fabric | Lakehouse Platform |
-| OneLake | Unified Storage |
-| Delta Lake | Transactional Storage |
-| PySpark | Data Transformation |
-| SQL | Analytics Queries |
-| Medallion Architecture | Data Layering Strategy |
+| Technology              | Purpose                        |
+|-------------------------|--------------------------------|
+| Microsoft Fabric        | Lakehouse Platform             |
+| OneLake                 | Unified Cloud Storage          |
+| Fabric Data Pipelines   | Pipeline Orchestration         |
+| Delta Lake              | Transactional Table Storage    |
+| PySpark                 | Data Transformation            |
+| SQL Analytics Endpoint  | Business KPI Queries           |
+| Medallion Architecture  | Bronze → Silver → Gold Layering|
 
 ---
 
 ## Medallion Architecture
 
-### Bronze Layer
+### Bronze Layer — Raw Ingestion
 
-Raw data ingestion layer.
+Raw data is ingested as-is from source CSVs into Delta Lake tables via **Fabric Data Pipelines** with no transformations applied, preserving full historical fidelity.
 
-Tables:
+**Tables:**
+- `bronze_matches`
+- `bronze_deliveries`
 
-- bronze_matches
-- bronze_deliveries
-
-Features:
-
-- Raw CSV ingestion
-- Delta table storage
+**Features:**
+- Raw CSV ingestion via Fabric Data Pipelines
+- Delta table storage on OneLake
 - Immutable historical data
-- Source preservation
+- Full source preservation with ingestion metadata
 
 ---
 
-### Silver Layer
+### Silver Layer — Cleaning & Standardisation
 
-Data cleaning and standardization layer.
+PySpark transformations clean, validate, and standardise the raw data into a query-safe layer, partitioned by season for downstream performance.
 
-Transformations:
+**Transformations Applied:**
+- Null imputation across 6 columns (`winner_runs`, `winner_wickets`, `method`, `outcome`, `eliminator`, `date`)
+- Derived column `result_type` added — classifies every match as Won by Runs / Won by Wickets / Tie / No Result
+- Team name standardisation across 3 historical franchise variants
+- Date column cast from string to `DateType` for time-series analysis
+- Whitespace trimming applied to all string join keys (`team1`, `team2`, `winner`, `toss_winner`)
+- 3 duplicate delivery records removed
+- Irrelevant columns dropped (`date1`, `date2`, `neutralvenue`, `balls_per_over`)
+- Season-based partitioning applied on both tables for optimised Gold layer queries
 
-- Duplicate detection and removal
-- Team name standardization
-- Data quality validation
-- Schema corrections
-- Season-based partitioning
+**Team Name Standardisation:**
 
-Standardized Team Names:
-
-| Original | Standardized |
-|-----------|-----------|
-| Delhi Daredevils | Delhi Capitals |
-| Kings XI Punjab | Punjab Kings |
-| Rising Pune Supergiant | Rising Pune Supergiants |
+| Original                | Standardised             |
+|-------------------------|--------------------------|
+| Delhi Daredevils        | Delhi Capitals           |
+| Kings XI Punjab         | Punjab Kings             |
+| Rising Pune Supergiant  | Rising Pune Supergiants  |
 
 ---
 
-### Gold Layer
+### Gold Layer — Business KPIs
 
-Business-ready analytical tables.
+Aggregated, business-ready analytical tables built from Silver data, queried directly via the Fabric SQL Analytics Endpoint.
 
-Tables:
+**Tables:**
 
-#### gold_batsman_stats
+#### `gold_batsman_stats`
+- Total runs, balls faced, strike rate
+- Fours, sixes
+- Career aggregates per batter
 
-Contains:
+#### `gold_bowler_stats`
+- Wickets, overs bowled
+- Economy rate, dot-ball percentage
 
-- Runs scored
-- Strike rate
-- Fours
-- Sixes
-- Balls faced
-
-#### gold_bowler_stats
-
-Contains:
-
-- Wickets
-- Economy rate
-- Dot-ball percentage
-- Overs bowled
-
-#### gold_team_season_performance
-
-Contains:
-
-- Matches played
-- Wins
-- Win percentage
-- Season performance metrics
+#### `gold_team_season_performance`
+- Matches played, wins, win percentage
+- Season-wise performance per team
 
 ---
 
@@ -133,37 +116,39 @@ Contains:
 
 ### Bronze Layer
 
-| Metric | Value |
-|----------|----------|
-| Bronze Tables | 2 |
-| Match Records | 1,095 |
+| Metric           | Value   |
+|------------------|---------|
+| Tables Created   | 2       |
+| Match Records    | 1,095   |
 | Delivery Records | 260,920 |
 
 ### Silver Layer
 
-| Metric | Value |
-|----------|----------|
-| Match Records | 1,095 |
-| Delivery Records | 260,917 |
-| Duplicate Records Removed | 3 |
-| Seasons Partitioned | 17 |
-| Team Name Variants Standardized | 3 |
+| Metric                              | Value   |
+|-------------------------------------|---------|
+| Match Records                       | 1,095   |
+| Delivery Records (after dedup)      | 260,917 |
+| Duplicate Records Removed           | 3       |
+| Columns with Null Imputation        | 6       |
+| Derived Columns Added               | 1       |
+| Columns Dropped                     | 4       |
+| Team Name Variants Standardised     | 3       |
+| Seasons Partitioned                 | 17      |
 
 ### Gold Layer
 
-| Metric | Value |
-|----------|----------|
-| Batsman Records | 674 |
-| Bowler Records | 531 |
-| Team Performance Records | 146 |
-| Gold Tables | 3 |
+| Metric                    | Value |
+|---------------------------|-------|
+| Batsman Records           | 674   |
+| Bowler Records            | 531   |
+| Team Performance Records  | 146   |
+| Gold Tables Created       | 3     |
 
 ---
 
 ## Example Analytics Queries
 
-### Top Run Scorers
-
+### Top 10 Run Scorers (All Time)
 ```sql
 SELECT batter, total_runs
 FROM gold_batsman_stats
@@ -171,8 +156,7 @@ ORDER BY total_runs DESC
 LIMIT 10;
 ```
 
-### Best Economy Bowlers
-
+### Most Economical Bowlers (Min 50 Overs)
 ```sql
 SELECT bowler, economy
 FROM gold_bowler_stats
@@ -180,11 +164,9 @@ WHERE overs > 50
 ORDER BY economy ASC;
 ```
 
-### Team Win Percentage
-
+### Team Win Percentage by Season
 ```sql
-SELECT team,
-AVG(win_percentage) AS avg_win_percentage
+SELECT team, AVG(win_percentage) AS avg_win_percentage
 FROM gold_team_season_performance
 GROUP BY team
 ORDER BY avg_win_percentage DESC;
@@ -194,7 +176,7 @@ ORDER BY avg_win_percentage DESC;
 
 ## Repository Structure
 
-```text
+```
 ipl-fabric-lakehouse/
 │
 ├── notebooks/
@@ -203,9 +185,13 @@ ipl-fabric-lakehouse/
 │   └── gold_aggregation.ipynb
 │
 ├── architecture/
-│   └── medallion_architecture.png
+│   └── architecture.jpg
 │
 ├── screenshots/
+│   ├── delta_tables.png
+│   ├── bronze_notebook.png
+│   ├── silver_notebook.png
+│   └── gold_notebook.png
 │
 ├── sql/
 │   └── analytics_queries.sql
@@ -214,10 +200,8 @@ ipl-fabric-lakehouse/
 │   └── dataset_link.txt
 │
 ├── project_metrics.md
-│
-├── README.md
-│
-└── requirements.txt
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -225,29 +209,22 @@ ipl-fabric-lakehouse/
 ## Screenshots
 
 ### Lakehouse Overview
-
 ![Lakehouse Overview](screenshots/delta_tables.png)
 
 ### Bronze Notebook
-
 ![Bronze Notebook](screenshots/bronze_notebook.png)
 
 ### Silver Notebook
-
 ![Silver Notebook](screenshots/silver_notebook.png)
 
 ### Gold Notebook
-
 ![Gold Notebook](screenshots/gold_notebook.png)
 
 ---
 
 ## Future Enhancements
 
-- Incremental data loading
-- Fabric Pipeline orchestration
-- Real-time IPL data streaming
-- Advanced player-performance analytics
-- Match outcome prediction using Machine Learning
-
----
+- Incremental data loading using Fabric Pipeline watermarking
+- Real-time IPL match streaming via Fabric Eventstream
+- Match outcome prediction using ML on Gold layer features
+- Advanced player performance analytics (powerplay vs death overs split)
